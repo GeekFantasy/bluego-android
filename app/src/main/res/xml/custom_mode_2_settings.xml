@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="cm2_imu"
+        android:icon="@drawable/imu"
+        android:title="@string/imu"
+        android:summary="@string/enable_pointer"/>
+
+    <PreferenceCategory
+        android:selectable="true"
+        android:iconSpaceReserved="true"
+        app:isPreferenceVisible="true"
+        android:dependency="cm2_imu">
+
+        <ListPreference
+            android:key="cm2_imu_gyro"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/imu_gyro"
+            app:defaultValue="201"
+            android:title="@string/gyro"
+            android:summary="%s"/>
+
+    </PreferenceCategory>
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="cm2_mfs"
+        android:icon="@drawable/multi_fun_switch"
+        android:title="@string/multi_func_switch"
+        android:summary="@string/enable_mfs_mapping"/>
+
+    <PreferenceCategory
+        android:selectable="true"
+        android:iconSpaceReserved="true"
+        app:isPreferenceVisible="true"
+        android:summary="@string/mapping_switch_key"
+        android:dependency="cm2_mfs">
+
+        <ListPreference
+            android:key="cm2_mfs_up"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/key_up"
+            android:title="@string/key_up"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:key="cm2_mfs_down"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/key_down"
+            android:title="@string/key_down"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:key="cm2_mfs_left"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/key_left"
+            android:title="@string/key_left"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:key="cm2_mfs_right"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/key_right"
+            android:title="@string/key_right"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:key="cm2_mfs_middle"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/key_middle"
+            android:title="@string/key_middle"
+            android:summary="%s"/>
+
+    </PreferenceCategory>
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="cm2_ges"
+        android:icon="@drawable/hand_gesture"
+        android:summary="@string/enable_ges_mapping"
+        android:title="@string/gestures" />
+
+    <PreferenceCategory
+        android:enabled="true"
+        android:selectable="true"
+        android:iconSpaceReserved="true"
+        android:summary="@string/mapping_gestures"
+        android:dependency="cm2_ges">
+
+        <ListPreference
+            android:key="cm2_ges_up"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/finger_up"
+            app:defaultValue="101"
+            android:title="@string/wave_up"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:key="cm2_ges_down"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/finger_down"
+            app:defaultValue="102"
+            android:title="@string/wave_down"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:key="cm2_ges_left"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/finger_left"
+            app:defaultValue="103"
+            android:title="@string/wave_left"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:key="cm2_ges_right"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/finger_right"
+            app:defaultValue="104"
+            android:title="@string/wave_right"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:key="cm2_ges_forward"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/push_down"
+            app:defaultValue="105"
+            android:title="@string/push_down"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:key="cm2_ges_clk"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/clockwise"
+            app:defaultValue="106"
+            android:title="@string/circle_clockwise"
+            android:summary="%s"/>
+
+        <ListPreference
+            android:key="cm2_ges_aclk"
+            android:entries="@array/device_operations"
+            android:entryValues="@array/device_op_values"
+            android:icon="@drawable/anti_clockwise"
+            app:defaultValue="107"
+            android:title="@string/circle_anti_clockwise"
+            android:summary="%s"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

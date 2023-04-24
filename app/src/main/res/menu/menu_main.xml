@@ -1,0 +1,22 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:title="More"
+        app:showAsAction="always"
+        android:icon="@drawable/more">
+        <menu>
+            <item
+                android:id="@+id/mode_setting"
+                android:icon="@drawable/settings"
+                android:title="模式设置"
+                app:showAsAction="collapseActionView" />
+
+            <item
+                android:id="@+id/add_device"
+                android:icon="@drawable/add"
+                android:title="绑定设备"
+                app:showAsAction="collapseActionView"/>
+        </menu>
+    </item>
+
+</menu>

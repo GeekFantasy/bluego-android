@@ -7,6 +7,7 @@
         <item>Winter</item>
     </string-array>
     <string-array name="device_operations">
+        <item>无</item>
         <item>【手机】屏幕中间开始上划</item>
         <item>【手机】屏幕中间开始下划</item>
         <item>【手机】屏幕中间开始左划</item>
@@ -14,9 +15,10 @@
         <item>【手机】屏幕中间单击</item>
         <item>【手机】屏幕中间双击</item>
         <item>【手机】返回键</item>
-        <item>【鼠标】指针移动</item>
+        <item>【鼠标】指针和滚轮</item>
         <item>【鼠标】左键单击</item>
         <item>【鼠标】右键单击</item>
+        <item>【鼠标】中键单击</item>
         <item>【键盘】上方向键单击</item>
         <item>【键盘】下方向键单击</item>
         <item>【键盘】左方向键单击</item>
@@ -25,6 +27,7 @@
         <item>【键盘】Enter键单击</item>
     </string-array>
     <string-array name="device_op_values">
+        <item>0</item>
         <item>101</item>
         <item>102</item>
         <item>103</item>
@@ -35,6 +38,7 @@
         <item>201</item>
         <item>202</item>
         <item>203</item>
+        <item>204</item>
         <item>301</item>
         <item>302</item>
         <item>303</item>

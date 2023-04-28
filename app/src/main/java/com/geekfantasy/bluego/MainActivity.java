@@ -42,9 +42,6 @@ import com.geekfantasy.bluego.permission.PermissionListener;
 import com.geekfantasy.bluego.permission.PermissionRequest;
 import com.geekfantasy.bluego.util.TypeConversion;
 
-import java.sql.Time;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences device_mode_preference;
 
     private List<String> deniedPermissionList = new ArrayList<>();
-    private String[] requestPermissionArray = new String[]{
+    private final String[] requestPermissionArray = new String[]{
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.BLUETOOTH,
@@ -424,33 +421,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume() is called.");
-        if (device_bond_preference != null) {
-            String last_sync_time = device_bond_preference.getString(LAST_SYNC_TIME, null);
-            if (last_sync_time != null) {
-                SimpleDateFormat format = new SimpleDateFormat(DATE_TIME_FORMAT);
-                long last_time = 0, time_now = 0, time_diff = 0;
-                try {
-                    last_time = format.parse(last_sync_time).getTime();
-                    time_now = new Time(System.currentTimeMillis()).getTime();
-                    time_diff = time_now - last_time;
-                }
-                catch (ParseException e) {
-                    throw new RuntimeException(e);
-                }
-                finally {
-                    // 如果没有上次访问时间，或者距离上次访问超过3分钟
-                    if (last_time == 0 || time_diff > 180000) {
-                        //Todo code need here
-                    }
-                }
-            }
-        }
-    }
-
     private void initBleManager() {
         bleManager = new BLEManager();
         if (!bleManager.initBle(MainActivity.this)) {
@@ -500,24 +470,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { //if above Android 6.0
-            final PermissionRequest permissionRequest = new PermissionRequest();
-            permissionRequest.requestRuntimePermission(this, requestPermissionArray, new PermissionListener() {
-                @Override
-                public void onGranted() {
-                    Log.d(TAG, "所有权限已被授予");
+        final PermissionRequest permissionRequest = new PermissionRequest();
+        permissionRequest.requestRuntimePermission(this, requestPermissionArray, new PermissionListener() {
+            @Override
+            public void onGranted() {
+                Log.d(TAG, "所有权限已被授予");
+            }
+            @Override
+            // if users selected no remind later, the the next time this callback is invoked.
+            public void onDenied(List<String> deniedPermissions) {
+                deniedPermissionList = deniedPermissions;
+                for (String deniedPermission : deniedPermissionList) {
+                    Log.e(TAG, "被拒绝权限：" + deniedPermission);
                 }
-                @Override // if users selected no remind later, the the next time this callback is invoked.
-                public void onDenied(List<String> deniedPermissions) {
-                    deniedPermissionList = deniedPermissions;
-                    for (String deniedPermission : deniedPermissionList) {
-                        Log.e(TAG, "被拒绝权限：" + deniedPermission);
-                    }
-                }
-            });
-        }
+            }
+        });
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -551,7 +519,7 @@ public class MainActivity extends AppCompatActivity {
                 binding.connectStateText.setText(R.string.device_connected);
                 binding.connectStateText.setVisibility(View.VISIBLE);
                 binding.connectProgress.setVisibility(View.GONE);
-                binding.connectState.setImageResource(R.drawable.connected);
+                binding.connectState.setImageResource(R.drawable.connected_green);
                 binding.connectState.setVisibility(View.VISIBLE);
                 break;
             case CONNECT_STATE_CONNECTING:
@@ -565,14 +533,14 @@ public class MainActivity extends AppCompatActivity {
                 binding.connectState.setVisibility(View.VISIBLE);
                 binding.connectStateText.setVisibility(View.VISIBLE);
                 binding.connectStateText.setText(R.string.no_device_connected);
-                binding.connectState.setImageResource(R.drawable.disconnected);
+                binding.connectState.setImageResource(R.drawable.disconnected_red);
                 break;
             case CONNECT_STATE_NO_DEIVCE:
                 binding.connectStateText.setText(R.string.no_bond_device);
                 binding.connectState.setVisibility(View.VISIBLE);
                 binding.connectProgress.setVisibility(View.GONE);
                 binding.connectStateText.setVisibility(View.VISIBLE);
-                binding.connectState.setImageResource(R.drawable.disconnected);
+                binding.connectState.setImageResource(R.drawable.disconnected_red);
                 break;
         }
     }

@@ -58,7 +58,7 @@ public class BLEManager {
     private BluetoothDevice curConnDevice;  //当前连接的设备
     private boolean isConnectIng = false;  //是否正在连接中
 
-    private Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler();
 
     public BLEManager() {
     }
@@ -85,7 +85,6 @@ public class BLEManager {
 
     ////////////////////////////////////  扫描设备  ///////////////////////////////////////////////
     //扫描设备回调
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] bytes) {
@@ -94,13 +93,7 @@ public class BLEManager {
                 return;
 
             if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+                Log.d(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                 return;
             }
             if (bluetoothDevice.getName() != null) {
@@ -130,21 +123,16 @@ public class BLEManager {
 
         this.onDeviceSearchListener = onDeviceSearchListener;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
-            if (!uuid.isEmpty()) {
-                bluetooth4Adapter.startLeScan(new UUID[]{UUID.fromString(uuid)}, leScanCallback); //
-                Log.d(TAG, "已开始扫描设备");
-            }
-            else {
-                bluetooth4Adapter.startLeScan(leScanCallback);
-                Log.d(TAG, "已开始扫描设备");
-            }
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        if (!uuid.isEmpty()) {
+            bluetooth4Adapter.startLeScan(new UUID[]{UUID.fromString(uuid)}, leScanCallback); //
+            Log.d(TAG, "已开始扫描设备");
         }
         else {
-            return;
+            bluetooth4Adapter.startLeScan(leScanCallback);
+            Log.d(TAG, "已开始扫描设备");
         }
 
         //设定最长扫描时间
@@ -152,7 +140,6 @@ public class BLEManager {
     }
 
     private Runnable stopScanRunnable = new Runnable() {
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
         public void run() {
             if (onDeviceSearchListener != null) {
@@ -168,7 +155,6 @@ public class BLEManager {
     /**
      * 停止扫描
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void stopDiscoveryDevice() {
         mHandler.removeCallbacks(stopScanRunnable);
 
@@ -184,13 +170,7 @@ public class BLEManager {
 
         Log.d(TAG, "停止扫描设备");
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            Log.d(TAG, "Manifest.permission.BLUETOOTH_SCAN is not granted.");
             return;
         }
         bluetooth4Adapter.stopLeScan(leScanCallback);
@@ -199,7 +179,6 @@ public class BLEManager {
 
     /////////////////////////////////////  执行连接  //////////////////////////////////////////////
     //连接/通讯结果回调
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
 
         //连接状态回调-连接成功/断开连接
@@ -238,13 +217,7 @@ public class BLEManager {
 
             BluetoothDevice bluetoothDevice = gatt.getDevice();
             if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+                Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                 return;
             }
 
@@ -461,9 +434,7 @@ public class BLEManager {
      * @param bluetoothDevice      蓝牙设备
      * @param outTime              连接超时时间
      * @param onBleConnectListener 蓝牙连接监听者
-     * @return
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public BluetoothGatt connectBleDevice(Context context, BluetoothDevice bluetoothDevice, long outTime, String serviceUUID, String readUUID, String writeUUID, OnBleConnectListener onBleConnectListener) {
         if (bluetoothDevice == null) {
             Log.e(TAG, "connectBleDevice()-->bluetoothDevice == null");
@@ -480,13 +451,7 @@ public class BLEManager {
 
         this.curConnDevice = bluetoothDevice;
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //            //    ActivityCompat#requestPermissions
-            //            // here to request the missing permissions, and then overriding
-            //            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
             return null;
         }
         Log.d(TAG, "开始准备连接：" + bluetoothDevice.getName() + "-->" + bluetoothDevice.getAddress());
@@ -508,7 +473,6 @@ public class BLEManager {
 
     //连接超时
     private Runnable connectOutTimeRunnable = new Runnable() {
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
         public void run() {
             if (mBluetoothGatt == null) {
@@ -518,13 +482,7 @@ public class BLEManager {
 
             isConnectIng = false;
             if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+                Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                 return;
             }
             mBluetoothGatt.disconnect();
@@ -538,7 +496,6 @@ public class BLEManager {
 
     //发现服务超时
     private Runnable serviceDiscoverOutTimeRunnable = new Runnable() {
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
         public void run() {
             if (mBluetoothGatt == null) {
@@ -548,13 +505,7 @@ public class BLEManager {
 
             isConnectIng = false;
             if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+                Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                 return;
             }
             mBluetoothGatt.disconnect();
@@ -576,7 +527,6 @@ public class BLEManager {
      * @param writeUUID
      * @return
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private boolean setupService(BluetoothGatt bluetoothGatt, String serviceUUID, String readUUID, String writeUUID) {
         if (bluetoothGatt == null) {
             Log.e(TAG, "setupService()-->bluetoothGatt == null");
@@ -600,7 +550,7 @@ public class BLEManager {
             Log.e(TAG, "setupService()-->bluetoothGattService == null");
             return false;
         }
-        Log.d(TAG, "setupService()-->bluetoothGattService = " + bluetoothGattService.toString());
+        Log.d(TAG, "setupService()-->bluetoothGattService = " + bluetoothGattService);
 
         if (readUUID == null || writeUUID == null) {
             Log.e(TAG, "setupService()-->readUUID == null || writeUUID == null");
@@ -632,13 +582,7 @@ public class BLEManager {
         for (BluetoothGattDescriptor descriptor : descriptors) {
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+                Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                 return false;
             }
             bluetoothGatt.writeDescriptor(descriptor);
@@ -664,7 +608,6 @@ public class BLEManager {
      * @param gatt           连接
      * @param characteristic 特征
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void enableNotification(boolean enable, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         if (gatt == null) {
             Log.e(TAG, "enableNotification-->gatt == null");
@@ -676,13 +619,7 @@ public class BLEManager {
         }
         //这一步必须要有，否则接收不到通知
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
             return;
         }
         gatt.setCharacteristicNotification(characteristic, enable);
@@ -697,7 +634,6 @@ public class BLEManager {
      * @param msg 消息
      * @return true  false
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public boolean sendMessage(String msg) {
         return sendMessage(TypeConversion.hexString2Bytes(msg));
     }
@@ -708,7 +644,6 @@ public class BLEManager {
      * @param msg 消息
      * @return true  false
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public boolean sendMessage(byte[] msg) {
         if (writeCharacteristic == null) {
             Log.e(TAG, "sendMessage(byte[])-->writeGattCharacteristic == null");
@@ -723,13 +658,7 @@ public class BLEManager {
         boolean b = writeCharacteristic.setValue(msg);
         Log.d(TAG, "写特征设置值结果：" + b);
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
             return false;
         }
         return mBluetoothGatt.writeCharacteristic(writeCharacteristic);
@@ -741,7 +670,6 @@ public class BLEManager {
     /**
      * 断开连接
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void disConnectDevice() {
         if (mBluetoothGatt == null) {
             Log.e(TAG, "disConnectDevice-->bluetoothGatt == null");
@@ -750,13 +678,7 @@ public class BLEManager {
 
         //系统断开
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
             return;
         }
         mBluetoothGatt.disconnect();
@@ -772,23 +694,19 @@ public class BLEManager {
      * @return true--支持4.0  false--不支持4.0
      */
     private boolean checkBle(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {  //API 18 Android 4.3
-            bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-            if (bluetoothManager == null) {
-                return false;
-            }
-            bluetooth4Adapter = bluetoothManager.getAdapter();
-            if (bluetooth4Adapter == null) {
-                return false;
-            }
-            else {
-                Log.d(TAG, "该设备支持蓝牙4.0");
-                return true;
-            }
-        }
-        else {
+        bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        if (bluetoothManager == null) {
             return false;
         }
+        bluetooth4Adapter = bluetoothManager.getAdapter();
+        if (bluetooth4Adapter == null) {
+            return false;
+        }
+        else {
+            Log.d(TAG, "该设备支持蓝牙4.0");
+            return true;
+        }
+
     }
 
     /**
@@ -811,13 +729,7 @@ public class BLEManager {
             if (forceOpen) {
                 Log.d(TAG, "直接打开手机蓝牙");
                 if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
+                    Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                     return;
                 }
                 bluetooth4Adapter.enable();  //BLUETOOTH_ADMIN权限
@@ -841,13 +753,7 @@ public class BLEManager {
             return;
 
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
             return;
         }
         bluetooth4Adapter.disable();
@@ -864,13 +770,7 @@ public class BLEManager {
             return false;
         }
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            Log.e(TAG, "Manifest.permission.BLUETOOTH_SCAN is not granted.");
             return false;
         }
         return bluetooth4Adapter.isDiscovering();

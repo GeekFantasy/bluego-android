@@ -34,21 +34,15 @@ public class PickerView extends View {
     public static final byte PERIOD = 10;
     public static final byte CODE = 0X10;
     private List<Item> mItemList;
-    private List<Item> mOrigianlItemList;
     /**
      * 选中的位置，这个位置是mDataList的中心位置，一直不变
      */
     private int mCurrentSelected;
     private Paint mPaint;
-
     private float mMaxItemSize = 400;
     private float mMinItemSize = 280;
-
     private float mMaxItemAlpha = 255;
     private float mMinItemAlpha = 20;
-
-    private int mColorText = 0x000000;
-
     private int mViewHeight;
     private int mViewWidth;
     private float mLastDownY;
@@ -83,20 +77,6 @@ public class PickerView extends View {
         init();
     }
 
-    public int getSelectedItemIndex()
-    {
-        int selectedIdex = 0;
-        int img_res_id = mItemList.get(mCurrentSelected).imageResourceId;
-
-        for (int i = 0; i < mOrigianlItemList.stream().count(); i++) {
-            if(mOrigianlItemList.get(i).imageResourceId == img_res_id){
-                selectedIdex = i;
-                break;
-            }
-        }
-        return selectedIdex;
-    }
-
     public void setOnSelectListener(onSelectListener listener) {
         mSelectListener = listener;
     }
@@ -110,11 +90,22 @@ public class PickerView extends View {
         Log.d(TAG, "setData() is called");
         if (items != null) {
             mItemList.addAll(items);
-            mOrigianlItemList.addAll(items);
         }
         mCurrentSelected = mItemList.size() / 2;
         performSelect();
         invalidate();
+    }
+
+    public void setImageBadge(String tag, Integer imageBadgeID)
+    {
+        for (Item item: mItemList) {
+            if(tag.equals(item.getTag())){
+                item.setImageBadge(imageBadgeID);
+            }
+            else {
+                item.setImageBadge(null);
+            }
+        }
     }
 
     private void moveHeadToTail() {
@@ -132,12 +123,13 @@ public class PickerView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        Log.d(TAG, "onMessure() is called");
         mViewHeight = getMeasuredHeight();
         mViewWidth = getMeasuredWidth();
-        // 按照View的高度计算字体大小
-//        mMaxTextSize = mViewHeight / 4.0f;
-//        mMinTextSize = mMaxTextSize / 2f;
+        mMaxItemSize = mViewWidth / 3.5F;
+        mMinItemSize = mViewWidth / 5.0F;
+
+        Log.d(TAG, "onMessure() is called, viewHeight:" + mViewHeight + "viewWidth:" + mViewWidth);
+
         isInit = true;
         invalidate();
     }
@@ -145,7 +137,6 @@ public class PickerView extends View {
     private void init() {
         Log.d(TAG, "init() is called");
         mItemList = new ArrayList<>();
-        mOrigianlItemList = new ArrayList<>();
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setStyle(Style.FILL);
         mPaint.setTextAlign(Align.CENTER);
@@ -162,35 +153,40 @@ public class PickerView extends View {
 
     private void drawData(Canvas canvas) {
         if (mItemList.isEmpty()) return;
-        // 先绘制选中的text再往上往下绘制其余的text
         float scale = parabola(mViewHeight / 4.0f, mMoveLen);
         float size = (mMaxItemSize - mMinItemSize) * scale + mMinItemSize;
-        mPaint.setTextSize(size/3.5f);
+        float textSize = size/3.5f;
+        mPaint.setTextSize(textSize);
 
         mPaint.setAlpha((int) ((mMaxItemAlpha - mMinItemAlpha) * scale + mMinItemAlpha));
-        // text居中绘制，注意baseline的计算才能达到居中，y值是text中心坐标
         float x = (float) (mViewWidth / 2.0);
-        float y = (float) (mViewHeight / 2.0 + mMoveLen);
+        float y = (float) (mViewHeight / 2.0  + mMoveLen);
 
         Bitmap pic = BitmapFactory.decodeResource(getContext().getResources(), mItemList.get(mCurrentSelected).getImageResourceId());
-        float baseline = (float) (y - pic.getHeight()/2);
         Log.i(TAG, "Scale:" + scale + ", size:" + size + ", View H:" + mViewHeight + ", W:" + mViewWidth + ", MoveLen:" + mMoveLen);
-        float picScale = size / pic.getHeight();
-        Matrix matrix = new Matrix();
-        matrix.postScale(picScale, picScale);
 
-        pic = Bitmap.createBitmap(pic, 0, 0, pic.getWidth(), pic.getHeight(), matrix, false);
-        canvas.drawText(mItemList.get(mCurrentSelected).getImageLabel(), 260, y + 50, mPaint);
-        canvas.drawBitmap(pic,x - pic.getWidth()/2,baseline, mPaint);
-        Log.d(TAG, "Pic H:" + pic.getHeight() + ", W:" + pic.getWidth() + ", picScale:" + picScale);
+        Matrix matrix = getScaleMatrix(size, pic.getHeight());
+        Bitmap picScaled = Bitmap.createBitmap(pic, 0, 0, pic.getWidth(), pic.getHeight(), matrix, false);
+        float picX = x - picScaled.getWidth()/2;
+        float picY = y - picScaled.getHeight()/2;
+        canvas.drawText(mItemList.get(mCurrentSelected).getTextLabel(), mViewWidth / 5.0f, y + textSize/2.0f, mPaint);
+        canvas.drawBitmap(picScaled, picX, picY, mPaint);
+
+        Integer imageBadgeId = mItemList.get(mCurrentSelected).getImageBadge();
+        if(imageBadgeId != null){
+            Bitmap picBadge = BitmapFactory.decodeResource(getContext().getResources(), imageBadgeId);
+            Matrix matrixBadge = getScaleMatrix(picScaled.getWidth() / 4.0f, picBadge.getWidth());
+            Bitmap picBadgeScaled = Bitmap.createBitmap(picBadge, 0, 0, picBadge.getWidth(), picBadge.getHeight(), matrixBadge, false);
+            canvas.drawBitmap(picBadgeScaled, picX + picScaled.getWidth() - picBadgeScaled.getWidth() / 2.0f, picY - picBadgeScaled.getHeight() / 2.0f, mPaint);
+        }
 
         // 绘制上方data
         for (int i = 1; (mCurrentSelected - i) >= 0; i++) {
-            drawOtherText(canvas, i, -1);
+            drawOtherData(canvas, i, -1);
         }
         // 绘制下方data
         for (int i = 1; (mCurrentSelected + i) < mItemList.size(); i++) {
-            drawOtherText(canvas, i, 1);
+            drawOtherData(canvas, i, 1);
         }
     }
 
@@ -199,31 +195,40 @@ public class PickerView extends View {
      * @param position 距离mCurrentSelected的差值
      * @param type     1表示向下绘制，-1表示向上绘制
      */
-    private void drawOtherText(Canvas canvas, int position, int type) {
+    private void drawOtherData(Canvas canvas, int position, int type) {
         float d = (float) (MARGIN_ALPHA * mMinItemSize * position + type * mMoveLen);
         float scale = parabola(mViewHeight / 4.0f, d);
         float size = (mMaxItemSize - mMinItemSize) * scale + mMinItemSize;
-        //mPaint.setTextSize(size);
         mPaint.setAlpha((int) ((mMaxItemAlpha - mMinItemAlpha) * scale + mMinItemAlpha));
 
         Bitmap pic = BitmapFactory.decodeResource(getContext().getResources(), mItemList.get(mCurrentSelected + type * position).getImageResourceId());
         float x = (float) (mViewWidth / 2.0);
         float y = (float) (mViewHeight / 2.0 + type * d);
-        //FontMetricsInt fmi = mPaint.getFontMetricsInt();
-        float baseline = (float) (y - pic.getHeight()/2);
-
-        float picScale = size / pic.getHeight();
-        Matrix matrix = new Matrix();
-        matrix.postScale(picScale, picScale);
 
         Log.d(TAG, "Scale:" + scale + ", d:" + d + ", size:" + size + ", MoveLen:" + mMoveLen );
-        Log.d(TAG, "Pic H:" + pic.getHeight() + ", W:" + pic.getWidth() + ", picScale:" + picScale);
 
         // draw scaled bitmap
+        Matrix matrix = getScaleMatrix(size, pic.getHeight());
         Bitmap picScaled = Bitmap.createBitmap(pic, 0, 0, pic.getWidth(), pic.getHeight(), matrix, false);
-        canvas.drawBitmap(picScaled, x - picScaled.getWidth()/2 , baseline, mPaint);
+        float picX = x - picScaled.getWidth()/2;
+        float picY = y - picScaled.getHeight()/2;
+        canvas.drawBitmap(picScaled, picX , picY, mPaint);
 
-        Log.d(TAG, "PicScale H:" + picScaled.getHeight() + ", W:" + picScaled.getWidth() + ", picScale:" + picScale);
+        Integer imageBadgeId = mItemList.get(mCurrentSelected + type * position).getImageBadge();
+        if(imageBadgeId != null){
+            Bitmap picBadge = BitmapFactory.decodeResource(getContext().getResources(), imageBadgeId);
+            Matrix matrixBadge = getScaleMatrix(picScaled.getWidth() / 4.0f, picBadge.getWidth());
+            Bitmap picBadgeScaled = Bitmap.createBitmap(picBadge, 0, 0, picBadge.getWidth(), picBadge.getHeight(), matrixBadge, false);
+            canvas.drawBitmap(picBadgeScaled, picX + picScaled.getWidth() - picBadgeScaled.getWidth() / 2.0f, picY - picBadgeScaled.getHeight() / 2.0f, mPaint);
+        }
+    }
+
+    private Matrix getScaleMatrix(float targetSize, float originalSize)
+    {
+        float picScale = targetSize / originalSize;
+        Matrix matrix = new Matrix();
+        matrix.postScale(picScale, picScale);
+        return matrix;
     }
 
     /**
@@ -261,7 +266,7 @@ public class PickerView extends View {
     }
 
     private void doMove(MotionEvent event) {
-        Log.d(TAG, "doMove() is called");
+        Log.d(TAG, "doMove() is called, even Y:" + event.getY());
         mMoveLen += (event.getY() - mLastDownY);
         if (mMoveLen > MARGIN_ALPHA * mMinItemSize / 2) {
             // 往下滑超过离开距离
@@ -336,12 +341,16 @@ public class PickerView extends View {
 
     public static class Item{
         private Integer imageResourceId;
-        private String imageLabel;
+        private Integer imageBadge;
+        private String textLabel;
+        private String tag;
 
-        public Item(Integer imageResourceId, String imageLabel)
+        public Item(Integer imageResourceId, String textLabel, String tag)
         {
             this.imageResourceId  = imageResourceId;
-            this.imageLabel = imageLabel;
+            this.textLabel = textLabel;
+            this.tag = tag;
+            imageBadge = null;
         }
 
         public Integer getImageResourceId()
@@ -349,9 +358,22 @@ public class PickerView extends View {
             return imageResourceId;
         }
 
-        public String getImageLabel()
+        public String getTextLabel()
         {
-            return imageLabel;
+            return textLabel;
+        }
+
+        public String getTag()
+        {
+            return tag;
+        }
+
+        public void setImageBadge(Integer badgeResourceId){
+            this.imageBadge = badgeResourceId;
+        }
+
+        public Integer getImageBadge(){
+            return imageBadge;
         }
     }
 }

@@ -31,10 +31,8 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.navigation.ui.AppBarConfiguration;
 import androidx.preference.PreferenceManager;
 
 import com.geekfantasy.bluego.ble.BLEManager;
@@ -59,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String MODE_SETTING_UUID = "0000ef02-0000-1000-8000-00805f9b34fb";  //mode setting read and write char
     private static final String DEVICE_BOND = "device_bond";
     private static final String DEVICE_ADDRESS = "device_address";
+    private static final String CURRENT_MODE = "current_mode";
     private static final String LAST_SYNC_TIME = "last_sync_time";
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final String MODE_PREFIX_AIR_MOUSE = "am_";
@@ -105,6 +104,8 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.BLUETOOTH_CONNECT
     };
 
+    PickerView.Item currentPickerViewItem;
+
     @SuppressLint("HandlerLeak")
     private final Handler mHandler = new Handler() {
         @SuppressLint("SetTextI18n")
@@ -144,6 +145,20 @@ public class MainActivity extends AppCompatActivity {
                     byte[] sendBufSuc = (byte[]) msg.obj;
                     String sendResult = TypeConversion.bytes2HexString(sendBufSuc, sendBufSuc.length);
                     binding.fabSync.clearAnimation();
+                    if(currentPickerViewItem != null){
+                        // tag the current item as saved to device
+                        pickerView.setImageBadge(currentPickerViewItem.getTag(), R.drawable.selected);
+                        pickerView.invalidate();
+
+                        // save the current mode to shared preference
+                        SharedPreferences.Editor editor = device_bond_preference.edit();
+                        editor.putString(CURRENT_MODE, currentPickerViewItem.getTag());
+                        if(!editor.commit())
+                        {
+                            Log.d(TAG, "当前模式本地保存失败");
+                        }
+                    }
+                    //CURRENT_MODE
                     Toast.makeText(MainActivity.this, R.string.mode_setting_success, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "发送数据成功，长度" + sendBufSuc.length + "--> " + sendResult);
                     break;
@@ -278,16 +293,14 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Bond device address:" + device_address);
 
                         if (bleManager == null) {
-                            Log.i(TAG, "There is not ble manager initialed.");
+                            Log.i(TAG, "There is no ble manager initialed.");
                             return;
                         }
 
                         BluetoothManager bluetoothManager = bleManager.getBluetoothManager();
-                        Log.d(TAG, "Successfully got bleManager!!");
-
                         if (bluetoothManager != null) {
+                            Log.d(TAG, "Successfully got bleManager!!");
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-
                                 BluetoothDevice bluetoothDevice = bluetoothManager.getAdapter().getRemoteLeDevice(device_address, BluetoothDevice.ADDRESS_TYPE_PUBLIC);
                                 if (bluetoothDevice != null) {
                                     if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
@@ -345,7 +358,7 @@ public class MainActivity extends AppCompatActivity {
                 if (btConnected) {
                     if (device_mode_preference != null) {
                         Map<String, ?> preferences = device_mode_preference.getAll();
-                        String mode_prefix = getModePrefixString();
+                        String mode_prefix = getCurrentModePrefix();
                         byte[] buff = getPreferenceData(preferences, mode_prefix);
                         Log.d(TAG, "Send message to ble device, mode_prefix:"+ mode_prefix + " message:" + new String(buff));
                         if(bleManager.sendMessage(buff)){
@@ -366,28 +379,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @NonNull
-            private String getModePrefixString() {
-                int curr_mode_idx = pickerView.getSelectedItemIndex();
-                String mode_prefix;
-                switch (curr_mode_idx)
+            private String getCurrentModePrefix() {
+                String prefix = MODE_PREFIX_AIR_MOUSE;
+                if(currentPickerViewItem != null)
                 {
-                    case 0:
-                        mode_prefix = MODE_PREFIX_AIR_MOUSE;
-                        break;
-                    case 1:
-                        mode_prefix = mode_prefix = MODE_PREFIX_GESTURE;
-                        break;
-                    case 2:
-                        mode_prefix = MODE_PREFIX_MLTI_FUNC_SWITCH;
-                        break;
-                    case 3:
-                        mode_prefix = MODE_PREFIX_CUSTOME_1;
-                        break;
-                    default:
-                        mode_prefix = MODE_PREFIX_CUSTOME_2;
-                        break;
+                    prefix = currentPickerViewItem.getTag();
                 }
-                return mode_prefix;
+                return prefix;
             }
         });
     }
@@ -400,21 +398,30 @@ public class MainActivity extends AppCompatActivity {
                 res.getString(R.string.multi_func_switch_mode),
                 res.getString(R.string.custom_1_mode),
                 res.getString(R.string.custom_2_mode)};
+        String[] tags = {MODE_PREFIX_AIR_MOUSE, MODE_PREFIX_GESTURE, MODE_PREFIX_MLTI_FUNC_SWITCH, MODE_PREFIX_CUSTOME_1, MODE_PREFIX_CUSTOME_2};
 
         List<PickerView.Item> lsItem = new ArrayList<>();
         for (int i = 0; i < images.length; i++) {
-            PickerView.Item item = new PickerView.Item(images[i], labels[i]);
+            PickerView.Item item = new PickerView.Item(images[i], labels[i], tags[i]);
             lsItem.add(item);
         }
 
         pickerView = findViewById(R.id.picker_view);
-        pickerView.setData(lsItem);
         pickerView.setOnSelectListener(new PickerView.onSelectListener() {
             @Override
-            public void onSelect(PickerView.Item pic) {
-
+            public void onSelect(PickerView.Item picItem) {
+                Log.d(TAG, "PickerView onSelect() is called.");
+                currentPickerViewItem = picItem;
             }
         });
+        pickerView.setData(lsItem);
+
+        if(device_bond_preference != null){
+            String current_mode = device_bond_preference.getString(CURRENT_MODE, null);
+            if(current_mode != null){
+                pickerView.setImageBadge(current_mode, R.drawable.selected);
+            }
+        }
     }
 
     @Override

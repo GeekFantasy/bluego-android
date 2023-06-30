@@ -17,8 +17,6 @@ import android.widget.TextView;
 import com.google.android.material.tabs.TabLayout;
 
 public class ModeSettingActivity extends AppCompatActivity {
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,7 +70,7 @@ public class ModeSettingActivity extends AppCompatActivity {
                     preference_xml = R.xml.gestures_settings;
                     break;
                 case 2:
-                    preference_xml = R.xml.multi_fun_switch_settings;
+                    preference_xml = R.xml.buttons_settings;
                     break;
                 case 3:
                     preference_xml = R.xml.custom_mode_1_settings;

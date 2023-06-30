@@ -22,7 +22,7 @@
     <string name="key_right">右键</string>
     <string name="key_middle">中键</string>
     <string name="enable_ges_mapping">启用手势映射</string>
-    <string name="gestures">手势控制</string>
+    <string name="gestures">手势识别传感器</string>
     <string name="mapping_gestures">关联每个手势的功能</string>
     <string name="wave_up">向上挥手</string>
     <string name="wave_down">向下挥手</string>

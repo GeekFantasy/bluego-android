@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="spiner_options">
-        <item>Spring</item>
-        <item>Summer</item>
-        <item>Autumn</item>
-        <item>Winter</item>
-    </string-array>
-    <string-array name="device_operations">
+    <!-- Operation only for multiple function switch -->
+    <string-array name="device_op_switch">
         <item>无</item>
         <item>【手机】屏幕中间开始上划</item>
         <item>【手机】屏幕中间开始下划</item>
@@ -15,18 +10,27 @@
         <item>【手机】屏幕中间单击</item>
         <item>【手机】屏幕中间双击</item>
         <item>【手机】返回键</item>
-        <item>【鼠标】指针和滚轮</item>
-        <item>【鼠标】左键单击</item>
-        <item>【鼠标】右键单击</item>
-        <item>【鼠标】中键单击</item>
-        <item>【键盘】上方向键单击</item>
-        <item>【键盘】下方向键单击</item>
-        <item>【键盘】左方向键单击</item>
-        <item>【键盘】右方向键单击</item>
-        <item>【键盘】空格键单击</item>
-        <item>【键盘】Enter键单击</item>
+        <item>【鼠标】左键</item>
+        <item>【鼠标】右键</item>
+        <item>【鼠标】中键</item>
+        <item>【键盘】上方向键</item>
+        <item>【键盘】下方向键</item>
+        <item>【键盘】左方向键</item>
+        <item>【键盘】右方向键</item>
+        <item>【键盘】空格键</item>
+        <item>【键盘】Enter键</item>
+        <item>【键盘】切换应用</item>
+        <item>【键盘】下一个虚拟桌面</item>
+        <item>【键盘】上一个虚拟桌面</item>
+        <item>【键盘】最小化所有窗口</item>
+        <item>【电子设备】音量加</item>
+        <item>【电子设备】音量减</item>
+        <item>【电子设备】静音</item>
+        <item>【电子设备】电源</item>
+        <item>【电子设备】重启</item>
+        <item>【电子设备】睡眠</item>
     </string-array>
-    <string-array name="device_op_values">
+    <string-array name="device_op_switch_values">
         <item>0</item>
         <item>101</item>
         <item>102</item>
@@ -35,7 +39,6 @@
         <item>105</item>
         <item>106</item>
         <item>107</item>
-        <item>201</item>
         <item>202</item>
         <item>203</item>
         <item>204</item>
@@ -45,16 +48,80 @@
         <item>304</item>
         <item>305</item>
         <item>306</item>
-    </string-array>
-    <!-- Reply Preference -->
-    <string-array name="reply_entries">
-        <item>Reply</item>
-        <item>Reply to all</item>
+        <item>307</item>
+        <item>308</item>
+        <item>309</item>
+        <item>310</item>
+        <item>401</item>
+        <item>402</item>
+        <item>403</item>
+        <item>404</item>
+        <item>405</item>
+        <item>406</item>
     </string-array>
 
-    <string-array name="reply_values">
-        <item>reply</item>
-        <item>reply_all</item>
+    <!-- Operation only for gyro -->
+    <string-array name="device_op_gyro">
+        <item>无</item>
+        <item>【鼠标】指针和滚轮</item>
+    </string-array>
+    <string-array name="device_op_gyro_values">
+        <item>0</item>
+        <item>201</item>
+    </string-array>
+
+    <!-- Operation only for gesture -->
+    <string-array name="device_op_ges">
+        <item>无</item>
+        <item>【手机】屏幕中间开始上划</item>
+        <item>【手机】屏幕中间开始下划</item>
+        <item>【手机】屏幕中间开始左划</item>
+        <item>【手机】屏幕中间开始右划</item>
+        <item>【手机】屏幕中间单击</item>
+        <item>【手机】屏幕中间双击</item>
+        <item>【手机】返回键</item>
+        <item>【键盘】上方向键</item>
+        <item>【键盘】下方向键</item>
+        <item>【键盘】左方向键</item>
+        <item>【键盘】右方向键</item>
+        <item>【键盘】空格键</item>
+        <item>【键盘】Enter键</item>
+        <item>【键盘】切换应用</item>
+        <item>【键盘】下一个虚拟桌面</item>
+        <item>【键盘】上一个虚拟桌面</item>
+        <item>【键盘】最小化所有窗口</item>
+        <item>【电子设备】音量加</item>
+        <item>【电子设备】音量减</item>
+        <item>【电子设备】静音</item>
+        <item>【电子设备】电源</item>
+        <item>【电子设备】重启</item>
+        <item>【电子设备】睡眠</item>
+    </string-array>
+    <string-array name="device_op_ges_values">
+        <item>0</item>
+        <item>101</item>
+        <item>102</item>
+        <item>103</item>
+        <item>104</item>
+        <item>105</item>
+        <item>106</item>
+        <item>107</item>
+        <item>301</item>
+        <item>302</item>
+        <item>303</item>
+        <item>304</item>
+        <item>305</item>
+        <item>306</item>
+        <item>307</item>
+        <item>308</item>
+        <item>309</item>
+        <item>310</item>
+        <item>401</item>
+        <item>402</item>
+        <item>403</item>
+        <item>404</item>
+        <item>405</item>
+        <item>406</item>
     </string-array>
 
 </resources>

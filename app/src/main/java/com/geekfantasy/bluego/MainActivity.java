@@ -60,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String MODE_PREFIX_AIR_MOUSE = "am_";
     private static final String MODE_PREFIX_MLTI_FUNC_SWITCH = "mfs_";
     private static final String MODE_PREFIX_GESTURE = "ges_";
-    private static final String MODE_PREFIX_CUSTOME_1 = "cm1_";
-    private static final String MODE_PREFIX_CUSTOME_2 = "cm2_";
+    private static final String MODE_PREFIX_CUSTOM_1 = "cm1_";
+    private static final String MODE_PREFIX_CUSTOM_2 = "cm2_";
 
     private static final int CONNECT_CONNECTING = 0x00;
     private static final int CONNECT_SUCCESS = 0x01;
@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int CONNECT_STATE_CONNECTED = 0X00;
     private static final int CONNECT_STATE_CONNECTING = 0X01;
     private static final int CONNECT_STATE_DISCONNECTED = 0X02;
-    private static final int CONNECT_STATE_NO_DEIVCE = 0X03;
+    private static final int CONNECT_STATE_NO_DEVICE = 0X03;
     private final Animation animation = new RotateAnimation(0.0f, 360.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
     private ActivityMainBinding binding;
     private PickerView pickerView;
@@ -307,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
                                         Log.d(TAG, "Successfully create bond to ble device with name:" + bluetoothDevice.getName());
                                         SharedPreferences.Editor editor = device_bond_preference.edit();
                                         editor.putString(DEVICE_ADDRESS, device_address);
-                                        editor.commit();
+                                        editor.apply();
 
                                         initAndConnectBleDevice();
                                     }
@@ -395,7 +395,7 @@ public class MainActivity extends AppCompatActivity {
                 res.getString(R.string.multi_func_switch_mode),
                 res.getString(R.string.custom_1_mode),
                 res.getString(R.string.custom_2_mode)};
-        String[] tags = {MODE_PREFIX_AIR_MOUSE, MODE_PREFIX_GESTURE, MODE_PREFIX_MLTI_FUNC_SWITCH, MODE_PREFIX_CUSTOME_1, MODE_PREFIX_CUSTOME_2};
+        String[] tags = {MODE_PREFIX_AIR_MOUSE, MODE_PREFIX_GESTURE, MODE_PREFIX_MLTI_FUNC_SWITCH, MODE_PREFIX_CUSTOM_1, MODE_PREFIX_CUSTOM_2};
 
         List<PickerView.Item> lsItem = new ArrayList<>();
         for (int i = 0; i < images.length; i++) {
@@ -441,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG, "There is a device bond with address: " + device_address);
         }
         else {
-            setDeviceConnectState(CONNECT_STATE_NO_DEIVCE);
+            setDeviceConnectState(CONNECT_STATE_NO_DEVICE);
             Log.i(TAG, "There no device bond ");
             return;
         }
@@ -535,7 +535,7 @@ public class MainActivity extends AppCompatActivity {
                 binding.connectStateText.setText(R.string.no_device_connected);
                 binding.connectState.setImageResource(R.drawable.disconnected_red);
                 break;
-            case CONNECT_STATE_NO_DEIVCE:
+            case CONNECT_STATE_NO_DEVICE:
                 binding.connectStateText.setText(R.string.no_bond_device);
                 binding.connectState.setVisibility(View.VISIBLE);
                 binding.connectProgress.setVisibility(View.GONE);

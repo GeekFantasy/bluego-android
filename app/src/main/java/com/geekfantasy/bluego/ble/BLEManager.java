@@ -14,12 +14,15 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.ParcelUuid;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.geekfantasy.bluego.BLEDevice;
@@ -63,8 +66,7 @@ public class BLEManager {
     public BLEManager() {
     }
 
-    public BluetoothManager getBluetoothManager()
-    {
+    public BluetoothManager getBluetoothManager() {
         return bluetoothManager;
     }
 
@@ -92,16 +94,15 @@ public class BLEManager {
             if (bluetoothDevice == null)
                 return;
 
-            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
-                return;
-            }
+            if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) return;
+
             if (bluetoothDevice.getName() != null) {
                 Log.d(TAG, bluetoothDevice.getName() + "-->" + bluetoothDevice.getAddress());
             }
             else {
                 Log.d(TAG, "null" + "-->" + bluetoothDevice.getAddress());
             }
+
             BLEDevice bleDevice = new BLEDevice(bluetoothDevice, rssi);
             if (onDeviceSearchListener != null) {
                 onDeviceSearchListener.onDeviceFound(bleDevice);  //扫描到设备回调
@@ -123,11 +124,10 @@ public class BLEManager {
 
         this.onDeviceSearchListener = onDeviceSearchListener;
 
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
+        if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_SCAN)) return;
+
         if (!uuid.isEmpty()) {
-            bluetooth4Adapter.startLeScan(new UUID[]{UUID.fromString(uuid)}, leScanCallback); //
+            bluetooth4Adapter.startLeScan(new UUID[]{UUID.fromString(uuid)}, leScanCallback);
             Log.d(TAG, "已开始扫描设备");
         }
         else {
@@ -169,13 +169,28 @@ public class BLEManager {
         }
 
         Log.d(TAG, "停止扫描设备");
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Manifest.permission.BLUETOOTH_SCAN is not granted.");
-            return;
-        }
+
+        if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_SCAN)) return;
+
         bluetooth4Adapter.stopLeScan(leScanCallback);
     }
 
+    private boolean checkBlueToothPermission(String btPermission) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ActivityCompat.checkSelfPermission(mContext, btPermission) != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, btPermission + "is not granted.");
+                return true;
+            }
+        }
+        else {
+            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Manifest.permission.BLUETOOTH_SCAN is not granted.");
+                return true;
+            }
+        }
+        return true;
+    }
 
     /////////////////////////////////////  执行连接  //////////////////////////////////////////////
     //连接/通讯结果回调
@@ -216,7 +231,7 @@ public class BLEManager {
             }
 
             BluetoothDevice bluetoothDevice = gatt.getDevice();
-            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
                 Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                 return;
             }
@@ -323,7 +338,7 @@ public class BLEManager {
         }
 
         @Override
-        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic,byte[] value, int status) {
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, byte[] value, int status) {
             super.onCharacteristicRead(gatt, characteristic, value, status);
             Log.d(TAG, "读status: " + status);
         }
@@ -450,10 +465,12 @@ public class BLEManager {
         this.onBleConnectListener = onBleConnectListener;
 
         this.curConnDevice = bluetoothDevice;
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+        if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
             Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
             return null;
         }
+
         Log.d(TAG, "开始准备连接：" + bluetoothDevice.getName() + "-->" + bluetoothDevice.getAddress());
         //出现 BluetoothGatt.android.os.DeadObjectException 蓝牙没有打开
         try {
@@ -481,7 +498,7 @@ public class BLEManager {
             }
 
             isConnectIng = false;
-            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
                 Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                 return;
             }
@@ -504,7 +521,7 @@ public class BLEManager {
             }
 
             isConnectIng = false;
-            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
                 Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                 return;
             }
@@ -581,7 +598,8 @@ public class BLEManager {
         List<BluetoothGattDescriptor> descriptors = writeCharacteristic.getDescriptors();
         for (BluetoothGattDescriptor descriptor : descriptors) {
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+            if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
                 Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                 return false;
             }
@@ -618,7 +636,7 @@ public class BLEManager {
             return;
         }
         //这一步必须要有，否则接收不到通知
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
             Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
             return;
         }
@@ -657,7 +675,7 @@ public class BLEManager {
 
         boolean b = writeCharacteristic.setValue(msg);
         Log.d(TAG, "写特征设置值结果：" + b);
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
             Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
             return false;
         }
@@ -677,7 +695,7 @@ public class BLEManager {
         }
 
         //系统断开
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
             Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
             return;
         }
@@ -728,7 +746,7 @@ public class BLEManager {
         if (!isEnable()) {
             if (forceOpen) {
                 Log.d(TAG, "直接打开手机蓝牙");
-                if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
                     Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
                     return;
                 }
@@ -752,7 +770,7 @@ public class BLEManager {
         if (bluetooth4Adapter == null)
             return;
 
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
             Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
             return;
         }
@@ -769,10 +787,33 @@ public class BLEManager {
         if (bluetooth4Adapter == null) {
             return false;
         }
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "Manifest.permission.BLUETOOTH_SCAN is not granted.");
-            return false;
-        }
+
+        if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_SCAN)) return false;
+
         return bluetooth4Adapter.isDiscovering();
+    }
+
+    public ArrayList<BluetoothDevice> GetBondDevices(UUID matchUuid) {
+
+        ArrayList<BluetoothDevice> devicesList = new ArrayList<>();
+
+        if (!checkBlueToothPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
+            Log.e(TAG, "Manifest.permission.BLUETOOTH_CONNECT is not granted.");
+            return devicesList;
+        }
+
+        Set<BluetoothDevice> btDevices = bluetooth4Adapter.getBondedDevices();
+        for (BluetoothDevice btDevice : btDevices) {
+            ParcelUuid[] uuids = btDevice.getUuids();
+
+            for (ParcelUuid uuid : uuids) {
+                if(uuid.getUuid().equals(matchUuid)){
+                    devicesList.add(btDevice);
+                    break;
+                }
+            }
+        }
+
+        return devicesList;
     }
 }

@@ -7,7 +7,7 @@
     <string name="ble_not_supported">该设备不支持低功耗蓝牙</string>
     <string name="device_connected">设备已连接</string>
     <string name="device_connecting">设备连接中...</string>
-    <string name="no_device_connected">未连接设备</string>
+    <string name="no_device_connected">设备未连接</string>
     <string name="no_bond_device">未绑定设备</string>
     <string name="cannot_read_mode_setting">无法读取模式配置</string>
     <string name="enable_pointer">启用光标移动映射</string>

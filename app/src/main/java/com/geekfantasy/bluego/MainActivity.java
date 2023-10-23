@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.ParcelUuid;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -40,11 +41,14 @@ import com.geekfantasy.bluego.ble.OnBleConnectListener;
 import com.geekfantasy.bluego.databinding.ActivityMainBinding;
 import com.geekfantasy.bluego.permission.PermissionListener;
 import com.geekfantasy.bluego.permission.PermissionRequest;
+import com.geekfantasy.bluego.util.DefaultPreferrence;
 import com.geekfantasy.bluego.util.TypeConversion;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "Bluego_Main";
@@ -101,6 +105,22 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.BLUETOOTH_CONNECT
     };
 
+    private final String[] requestPermissionArrayAbove31 = new String[]{
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT
+    };
+
+    private final String[] requestPermissionArrayBelow30 = new String[]{
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_ADMIN,
+    };
+
     PickerView.Item currentPickerViewItem;
 
     @SuppressLint("HandlerLeak")
@@ -142,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
                     byte[] sendBufSuc = (byte[]) msg.obj;
                     String sendResult = TypeConversion.bytes2HexString(sendBufSuc, sendBufSuc.length);
                     binding.fabSync.clearAnimation();
-                    if(currentPickerViewItem != null){
+                    if (currentPickerViewItem != null) {
                         // tag the current item as saved to device
                         pickerView.setImageBadge(currentPickerViewItem.getTag(), R.drawable.selected);
                         pickerView.invalidate();
@@ -150,8 +170,7 @@ public class MainActivity extends AppCompatActivity {
                         // save the current mode to shared preference
                         SharedPreferences.Editor editor = device_bond_preference.edit();
                         editor.putString(CURRENT_MODE, currentPickerViewItem.getTag());
-                        if(!editor.commit())
-                        {
+                        if (!editor.commit()) {
                             Log.d(TAG, "当前模式本地保存失败");
                         }
                     }
@@ -297,23 +316,30 @@ public class MainActivity extends AppCompatActivity {
                         BluetoothManager bluetoothManager = bleManager.getBluetoothManager();
                         if (bluetoothManager != null) {
                             Log.d(TAG, "Successfully got bleManager!!");
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                BluetoothDevice bluetoothDevice = bluetoothManager.getAdapter().getRemoteLeDevice(device_address, BluetoothDevice.ADDRESS_TYPE_PUBLIC);
-                                if (bluetoothDevice != null) {
-                                    if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                                        requestPermissions();
-                                    }
-                                    if (bluetoothDevice.createBond()) {
-                                        Log.d(TAG, "Successfully create bond to ble device with name:" + bluetoothDevice.getName());
-                                        SharedPreferences.Editor editor = device_bond_preference.edit();
-                                        editor.putString(DEVICE_ADDRESS, device_address);
-                                        editor.apply();
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                BluetoothDevice bluetoothDevice = bluetoothManager.getAdapter().getRemoteDevice(device_address);
 
-                                        initAndConnectBleDevice();
+                                if (bluetoothDevice != null) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
+                                        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                                            requestPermissions(requestPermissionArrayAbove31);
+                                        }
                                     }
-                                    else {
-                                        Log.d(TAG, "Failed to create bond to ble device!!");
+                                    else{
+                                        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                                            requestPermissions(requestPermissionArrayBelow30);
+                                        }
                                     }
+
+                                    SharedPreferences.Editor editor = device_bond_preference.edit();
+                                    editor.putString(DEVICE_ADDRESS, device_address);
+                                    editor.apply();
+
+                                    if(bluetoothDevice.getBondState() != BluetoothDevice.BOND_BONDED){
+                                        bluetoothDevice.createBond();
+                                    }
+
+                                    initAndConnectBleDevice();
                                 }
                             }
                         }
@@ -341,7 +367,35 @@ public class MainActivity extends AppCompatActivity {
         initAndConnectBleDevice();
         initModePickerView();
         initFabSync();
-        requestPermissions();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            requestPermissions(requestPermissionArrayAbove31);
+        }
+        else {
+            requestPermissions(requestPermissionArrayBelow30);
+        }
+
+        initDefaultSettings();
+    }
+
+
+    private void initDefaultSettings() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        if(pref != null && pref.getAll().isEmpty())
+        {
+            SharedPreferences.Editor editor = pref.edit();
+            DefaultPreferrence defaultPreferrence = new DefaultPreferrence();
+
+            for (DefaultPreferrence.StringPreferrence strpref :defaultPreferrence.strPreferrences) {
+                editor.putString(strpref.key, strpref.strValue);
+            }
+
+            for (DefaultPreferrence.BoolPreferrence boolpref :defaultPreferrence.boolPreferrences) {
+                editor.putBoolean(boolpref.key, boolpref.boolValue);
+            }
+
+            editor.apply();
+        }
     }
 
     private void initFabSync() {
@@ -450,16 +504,9 @@ public class MainActivity extends AppCompatActivity {
         BluetoothDevice bluetoothDevice = null;
         Log.d(TAG, "Successfully got bleManager!!");
         if (bluetoothManager != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                bluetoothDevice = bluetoothManager.getAdapter().getRemoteLeDevice(device_address, BluetoothDevice.ADDRESS_TYPE_PUBLIC);
+
+                bluetoothDevice = bluetoothManager.getAdapter().getRemoteDevice(device_address);
                 Log.d(TAG, "Successfully got a bluetooth device!!");
-                if (bluetoothDevice != null) {
-                    if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                        requestPermissions();
-                    }
-                    Log.d(TAG, "Got the bond device name: " + bluetoothDevice.getName());
-                }
-            }
         }
 
         BluetoothGatt btGatt = bleManager.connectBleDevice(this, bluetoothDevice, 15000, SERVICE_UUID, MODE_SETTING_UUID, MODE_SETTING_UUID, onBleConnectListener);
@@ -469,9 +516,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void requestPermissions() {
+    private void requestPermissions(String[] permArray) {
         final PermissionRequest permissionRequest = new PermissionRequest();
-        permissionRequest.requestRuntimePermission(this, requestPermissionArray, new PermissionListener() {
+        permissionRequest.requestRuntimePermission(this, permArray, new PermissionListener() {
             @Override
             public void onGranted() {
                 Log.d(TAG, "所有权限已被授予");

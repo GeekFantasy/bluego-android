@@ -4,6 +4,8 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,16 +66,17 @@ public class LVDevicesAdapter extends BaseAdapter {
             viewHolder = (DeviceViewHolder) view.getTag();
         }
 
-        if (ActivityCompat.checkSelfPermission( context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                //TODO considering adding a handler
+            }
         }
+        else {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                //TODO considering adding a handler
+            }
+        }
+
         if (list.get(i).getBluetoothDevice().getName() == null) {
             viewHolder.tvDeviceName.setText("NULL");
         }
@@ -130,5 +133,4 @@ public class LVDevicesAdapter extends BaseAdapter {
         TextView tvDeviceAddress;
         TextView tvDeviceRSSI;
     }
-
 }

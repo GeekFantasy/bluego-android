@@ -22,7 +22,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -31,12 +30,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.geekfantasy.bluego.ble.BLEManager;
-import com.geekfantasy.bluego.databinding.ActivityAddDeviceBinding;
 import com.geekfantasy.bluego.permission.*;
 import com.geekfantasy.bluego.ble.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class AddDeviceActivity extends AppCompatActivity {
 
@@ -44,7 +43,7 @@ public class AddDeviceActivity extends AppCompatActivity {
 
     //bt_patch(mtu).bin
 
-    public static final String SERVICE_UUID = "0000ef00-0000-1000-8000-00805f9b34fb";  //蓝牙通讯服务
+    public static final String SERVICE_UUID = "00001812-0000-1000-8000-00805f9b34fb";  //蓝牙通讯服务
 
     private List<String> deniedPermissionList = new ArrayList<>();
 
@@ -82,13 +81,20 @@ public class AddDeviceActivity extends AppCompatActivity {
     //当前设备连接状态
     private boolean btConnected = false;
 
-    private String[] requestPermissionArray = new String[]{
+    private String[] requestPermissionArrayAbove31 = new String[]{
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT
+    };
+
+    private String[] requestPermissionArrayBelow30 = new String[]{
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_ADMIN
     };
 
     @SuppressLint("HandlerLeak")
@@ -107,14 +113,27 @@ public class AddDeviceActivity extends AppCompatActivity {
                 case DISCOVERY_DEVICE:  //扫描到设备
                     BLEDevice bleDevice = (BLEDevice) msg.obj;
                     lvDevicesAdapter.addDevice(bleDevice);
-                    lvDevices.setVisibility(View.VISIBLE);
+                    if(lvDevices.getVisibility() == View.GONE)
+                        lvDevices.setVisibility(View.VISIBLE);
                     break;
                 case DISCOVERY_OUT_TIME:  //超时扫描到设备
                     pbSearchDevices.setVisibility(View.GONE);
                     if (lvDevicesAdapter.getCount() <= 0) {
-                        lvDevices.setVisibility(View.GONE);
-                        tvSearchTips.setVisibility(View.GONE);
-                        llNoDeviceFound.setVisibility(View.VISIBLE);
+                        ArrayList<BluetoothDevice> bondDevices = bleManager.GetBondDevices(UUID.fromString(SERVICE_UUID));
+                        if(bondDevices.size() > 0){
+                            for (BluetoothDevice device : bondDevices) {
+                                lvDevicesAdapter.addDevice(new BLEDevice(device, 100));
+                                if(lvDevices.getVisibility() == View.GONE)
+                                    lvDevices.setVisibility(View.VISIBLE);
+                            }
+                            tvSearchDevice.setText("扫描完毕");
+                            tvSearchTips.setText("请点击选择要绑定的设备");
+                        }
+                        else {
+                            lvDevices.setVisibility(View.GONE);
+                            tvSearchTips.setVisibility(View.GONE);
+                            llNoDeviceFound.setVisibility(View.VISIBLE);
+                        }
                     }
                     else {
                         tvSearchDevice.setText("扫描完毕");
@@ -176,8 +195,6 @@ public class AddDeviceActivity extends AppCompatActivity {
         lvDevices.setVisibility(View.VISIBLE);
         pbSearchDevices.setVisibility(View.VISIBLE);
 
-        //Todo the first time permission granted , cannot find the device.
-        //Todo cannot select a device during device searching.
         searchBtDevice();
     }
 
@@ -270,7 +287,16 @@ public class AddDeviceActivity extends AppCompatActivity {
     private void initPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { //if above Android 6.0
             final PermissionRequest permissionRequest = new PermissionRequest();
-            permissionRequest.requestRuntimePermission(this, requestPermissionArray, new PermissionListener() {
+
+            String[] permArray;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                permArray = requestPermissionArrayAbove31;
+            }
+            else{
+                permArray = requestPermissionArrayBelow30;
+            }
+
+            permissionRequest.requestRuntimePermission(this, permArray, new PermissionListener() {
                 @Override
                 public void onGranted() {
                     Log.d(TAG, "所有权限已被授予");
@@ -309,6 +335,7 @@ public class AddDeviceActivity extends AppCompatActivity {
 
         bleManager.startDiscoveryDevice(onDeviceSearchListener, SERVICE_UUID, 10000);
     }
+
 
     private OnDeviceSearchListener onDeviceSearchListener = new OnDeviceSearchListener() {
         @Override
